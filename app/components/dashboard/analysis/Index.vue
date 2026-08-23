@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Link } from '@/types'
-import { getLocalTimeZone, now } from '@internationalized/date'
 
 withDefaults(defineProps<{
   link?: Link | null
@@ -9,44 +8,33 @@ withDefaults(defineProps<{
 })
 
 const analysisStore = useDashboardAnalysisStore()
-const tz = getLocalTimeZone()
-
-const viewMode = ref<'trend' | 'heatmap'>('trend')
-const heatmapMetric = ref<'visits' | 'visitors'>('visits')
-
-function initDateRange() {
-  if (analysisStore.dateRange.startAt === 0) {
-    analysisStore.setDateRange([
-      date2unix(now(tz).subtract({ days: 7 })),
-      date2unix(now(tz)),
-    ])
-  }
-}
-
-onBeforeMount(() => {
-  analysisStore.restoreFromUrl()
-  initDateRange()
-})
 </script>
 
 <template>
-  <h3 v-if="link" class="text-xl leading-10 font-bold">
-    {{ link.slug }} {{ $t('dashboard.stats') }}
-  </h3>
+  <h2 v-if="link" class="text-xl/10 font-bold">
+    {{ $t('dashboard.stats', { slug: link.slug }) }}
+  </h2>
   <DashboardAnalysisCounters />
-  <Tabs v-model="viewMode" default-value="trend">
-    <div class="mb-4 flex items-center justify-between">
+  <Tabs v-model="analysisStore.viewMode" default-value="trend">
+    <div class="mb-4 flex flex-wrap items-center gap-2">
       <TabsList>
-        <TabsTrigger value="trend">
+        <TabsTrigger
+          value="trend"
+        >
           {{ $t('dashboard.trend') }}
         </TabsTrigger>
-        <TabsTrigger value="heatmap">
+        <TabsTrigger
+          value="heatmap"
+        >
           {{ $t('dashboard.weekly_trend') }}
         </TabsTrigger>
       </TabsList>
 
-      <Select v-if="viewMode === 'heatmap'" v-model="heatmapMetric">
-        <SelectTrigger class="h-8 w-[120px]">
+      <Select v-if="analysisStore.viewMode === 'heatmap'" v-model="analysisStore.heatmapMetric">
+        <SelectTrigger
+          class="w-[120px]"
+          :aria-label="`${$t('dashboard.weekly_trend')}: ${$t('dashboard.visits')} / ${$t('dashboard.visitors')}`"
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -59,11 +47,11 @@ onBeforeMount(() => {
         </SelectContent>
       </Select>
     </div>
-    <TabsContent value="trend" class="mt-0">
-      <DashboardAnalysisViews v-if="viewMode === 'trend'" />
+    <TabsContent value="trend">
+      <DashboardAnalysisViews v-if="analysisStore.viewMode === 'trend'" />
     </TabsContent>
-    <TabsContent value="heatmap" class="mt-0">
-      <DashboardAnalysisHeatmap v-if="viewMode === 'heatmap'" :metric="heatmapMetric" />
+    <TabsContent value="heatmap">
+      <DashboardAnalysisHeatmap v-if="analysisStore.viewMode === 'heatmap'" :metric="analysisStore.heatmapMetric" />
     </TabsContent>
   </Tabs>
   <DashboardAnalysisMetrics />

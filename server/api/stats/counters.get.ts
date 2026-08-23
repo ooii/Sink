@@ -1,20 +1,27 @@
 import type { H3Event } from 'h3'
-import { QuerySchema } from '@@/schemas/query'
+import type { RawBuilder } from 'kysely'
+import { sql } from 'kysely'
+import { QuerySchema } from '#shared/schemas/query'
 
-const { select } = SqlBricks
+function weightedDistinct(column: string): RawBuilder<number> {
+  return sql<number>`ROUND(COUNT(DISTINCT ${sql.ref(column)}) * SUM(_sample_interval) / COUNT())`
+}
 
-function query2sql(query: Query, event: H3Event): string {
-  const filter = query2filter(query)
+function query2sql(query: Query, event: H3Event) {
+  const filter = buildAnalyticsFilter(query)
   const { dataset } = useRuntimeConfig(event)
-  // Use weighted distinct count to account for sampling
-  // Formula: COUNT(DISTINCT col) * SUM(_sample_interval) / COUNT() ≈ actual distinct count
-  const sql = select(`
-    SUM(_sample_interval) as visits,
-    ROUND(COUNT(DISTINCT ${logsMap.ip}) * SUM(_sample_interval) / COUNT()) as visitors,
-    ROUND(COUNT(DISTINCT ${logsMap.referer}) * SUM(_sample_interval) / COUNT()) as referers
-  `.trim().replace(/\s+/g, ' ')).from(dataset).where(filter)
-  appendTimeFilter(sql, query)
-  return sql.toString()
+  const analyticsQuery = createAnalyticsQuery(dataset)
+  const filteredQuery = filter ? analyticsQuery.where(filter) : analyticsQuery
+  // Weighted distinct count: COUNT(DISTINCT col) * SUM(_sample_interval) / COUNT() ≈ actual distinct count
+  const statement = filteredQuery.select([
+    sql<number>`SUM(_sample_interval)`.as('visits'),
+    weightedDistinct(logsMap.ip!).as('visitors'),
+    weightedDistinct(logsMap.referer!).as('referers'),
+  ])
+
+  return query.id
+    ? statement.select(sql.ref('index1').as('id')).groupBy('index1')
+    : statement
 }
 
 export default eventHandler(async (event) => {

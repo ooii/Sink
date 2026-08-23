@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { Link } from '@@/app/types'
-import { Download, Loader } from 'lucide-vue-next'
+import type { Link } from '@/types'
+import { Download, Loader } from '@lucide/vue'
 import { toast } from 'vue-sonner'
+import { createExportFilename } from '#shared/utils/export-file'
 
 interface ExportResponse {
   version: string
@@ -48,7 +49,7 @@ async function handleExport() {
       links: allLinks,
     }
 
-    saveAsJson(exportData, `sink-links-${Date.now()}.json`)
+    saveAsJson(exportData, createExportFilename('sink-links', 'json'))
 
     toast.success(t('migrate.export.success'))
   }
@@ -67,13 +68,23 @@ async function handleExport() {
 <template>
   <Card class="h-fit">
     <CardHeader>
-      <CardTitle>{{ $t('migrate.export.title') }}</CardTitle>
+      <CardTitle><h2>{{ $t('migrate.export.title') }}</h2></CardTitle>
       <CardDescription>{{ $t('migrate.export.description') }}</CardDescription>
     </CardHeader>
     <CardContent>
-      <Button :disabled="isExporting" @click="handleExport">
-        <Loader v-if="isExporting" class="mr-2 h-4 w-4 animate-spin" />
-        <Download v-else class="mr-2 h-4 w-4" />
+      <Button
+        class="tabular-nums"
+        :disabled="isExporting"
+        :aria-busy="isExporting"
+        @click="handleExport"
+      >
+        <Loader
+          v-if="isExporting" aria-hidden="true" class="
+            size-4
+            motion-safe:animate-spin
+          "
+        />
+        <Download v-else aria-hidden="true" class="size-4" />
         <template v-if="isExporting && exportedCount > 0">
           {{ exportedCount }} {{ $t('migrate.export.total_links') }}…
         </template>

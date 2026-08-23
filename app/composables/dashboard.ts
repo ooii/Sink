@@ -1,7 +1,7 @@
 import type { Component } from 'vue'
-import { useRoute } from '#imports'
-import { Activity, ChartArea, FolderSync, Link } from 'lucide-vue-next'
+import { Activity, ChartArea, FolderSync, Link, ScanSearch } from '@lucide/vue'
 import { computed } from 'vue'
+import { useRoute } from '#imports'
 
 export interface DashboardRouteConfig {
   readonly paths: readonly string[]
@@ -29,6 +29,11 @@ export const DASHBOARD_ROUTES = {
     paths: ['/dashboard/realtime'],
     titleKey: 'nav.realtime',
     icon: Activity,
+  },
+  check: {
+    paths: ['/dashboard/check'],
+    titleKey: 'nav.check',
+    icon: ScanSearch,
   },
   migrate: {
     paths: ['/dashboard/migrate'],

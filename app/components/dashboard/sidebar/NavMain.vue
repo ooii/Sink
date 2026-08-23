@@ -35,10 +35,14 @@ watch(() => route.path, () => {
         <SidebarMenuButton
           as-child
           :tooltip="t(item.title)"
-          :data-active="item.isActive"
+          :is-active="item.isActive"
+          class="
+            hover:rounded-4xl
+            data-active:rounded-4xl
+          "
         >
           <NuxtLink :to="item.url">
-            <component :is="item.icon" />
+            <component :is="item.icon" aria-hidden="true" />
             <span>{{ t(item.title) }}</span>
           </NuxtLink>
         </SidebarMenuButton>
@@ -53,10 +57,14 @@ watch(() => route.path, () => {
         <SidebarMenuButton
           as-child
           :tooltip="t(item.title)"
-          :data-active="item.isActive"
+          :is-active="item.isActive"
+          class="
+            hover:rounded-4xl
+            data-active:rounded-4xl
+          "
         >
           <NuxtLink :to="item.url">
-            <component :is="item.icon" />
+            <component :is="item.icon" aria-hidden="true" />
             <span>{{ t(item.title) }}</span>
           </NuxtLink>
         </SidebarMenuButton>
